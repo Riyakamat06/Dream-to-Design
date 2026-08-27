@@ -28,3 +28,14 @@ class User(Base):
 
     # a user can have many dreams
     dreams = relationship("Dream", back_populates="user")
+    """
+models/user.py's role in the project:
+Defines the User table — every student's account, including their
+login credentials and a link to all the dreams they've created.
+
+Core idea:
+Follows the same relationship pattern as dream.py (a ForeignKey column
+paired with a relationship() line) to complete the two-way link between
+User and Dream — enabling user.dreams and dream.user to both work in
+Python without writing manual SQL joins.
+"""
