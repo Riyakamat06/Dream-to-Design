@@ -30,3 +30,15 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    """
+schemas.py's role in the project:
+Defines what data is allowed in and out of the API for user signup,
+login, and profile responses.
+
+Core idea:
+Separates the public-facing shape of data (what the frontend sends and
+receives) from the internal database shape (models/user.py). This
+distinction matters most for security — UserResponse deliberately
+excludes the password field entirely, so it can never accidentally
+leak out through the API, even though the database itself stores it.
+"""
