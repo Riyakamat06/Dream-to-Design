@@ -4,6 +4,7 @@ from database import get_db
 from models.user import User
 from schemas import UserCreate, UserResponse, UserLogin
 from auth import hash_password, verify_password, create_access_token
+from crud import get_user_by_email, create_user
 
 # This file defines the actual API endpoints for user accounts:
 # - POST /users/signup -> create a new account
@@ -29,28 +30,20 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/signup", response_model=UserResponse)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user.email).first()
+    existing_user = get_user_by_email(db, user.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
 
-    new_user = User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hash_password(user.password),
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
+    new_user = create_user(db, user)
     return new_user
 
 
 @router.post("/login")
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == credentials.email).first()
+    user = get_user_by_email(db, credentials.email)
 
     if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
@@ -69,7 +62,10 @@ the frontend will call to create an account and authenticate.
 
 Core idea:
 Ties together everything built today: schemas validate incoming data,
-auth.py handles password hashing and token creation, and database.py
-provides the session. response_model=UserResponse on signup ensures
-the password can never leak into the API response, even by accident.
+crud.py handles the actual database queries, auth.py handles password
+hashing and token creation, and database.py provides the session.
+response_model=UserResponse on signup ensures the password can never
+leak into the API response, even by accident. Keeping crud.py separate
+means the same get_user_by_email logic is reused by both signup and
+login instead of being duplicated.
 """
