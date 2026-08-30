@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from models.user import User
 from schemas import UserCreate
-from auth import hash_password
+from utils.security import hash_password
 
 # This file holds reusable database query functions — the actual
 # logic for reading/writing to the database, kept separate from

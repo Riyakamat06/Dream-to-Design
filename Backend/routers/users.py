@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 from schemas import UserCreate, UserResponse, UserLogin
-from auth import hash_password, verify_password, create_access_token
+from utils.security import verify_password, create_access_token
 from crud import get_user_by_email, create_user
 
 # This file defines the actual API endpoints for user accounts:
