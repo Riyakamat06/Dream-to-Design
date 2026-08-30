@@ -1,3 +1,4 @@
+from dependencies import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -23,6 +24,11 @@ from crud import get_user_by_email, create_user
 # 3. Verify the password matches the stored hash
 # 4. If valid, create and return an access token
 # 5. If invalid, reject with a 401 error
+# /me flow:
+# 1. Uses get_current_user to identify who's making the request
+#    (requires a valid token in the Authorization header)
+# 2. Returns that user's own profile — no lookup needed, since
+#    get_current_user already found the exact right user
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -53,6 +59,11 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
     access_token = create_access_token({"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserResponse)
+def read_current_user(current_user: User = Depends(get_current_user)):
+    return current_user
 
 
 """
