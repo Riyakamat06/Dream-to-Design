@@ -10,6 +10,7 @@ from crud import get_user_by_email, create_user
 # This file defines the actual API endpoints for user accounts:
 # - POST /users/signup -> create a new account
 # - POST /users/login -> verify credentials, return a login token
+# - GET /users/me -> return the logged-in user's own profile
 
 # Signup flow:
 # 1. Receive username, email, password (validated by UserCreate schema)
@@ -24,6 +25,7 @@ from crud import get_user_by_email, create_user
 # 3. Verify the password matches the stored hash
 # 4. If valid, create and return an access token
 # 5. If invalid, reject with a 401 error
+
 # /me flow:
 # 1. Uses get_current_user to identify who's making the request
 #    (requires a valid token in the Authorization header)
@@ -31,7 +33,7 @@ from crud import get_user_by_email, create_user
 #    get_current_user already found the exact right user
 
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["auth"])
 
 
 @router.post("/signup", response_model=UserResponse)
@@ -67,16 +69,16 @@ def read_current_user(current_user: User = Depends(get_current_user)):
 
 
 """
-routers/users.py's role in the project:
-Defines the actual signup and login API endpoints — the entry points
-the frontend will call to create an account and authenticate.
+routers/auth.py's role in the project:
+Defines the actual signup, login, and current-user-profile API
+endpoints — the entry points the frontend will call to create an
+account, authenticate, and check who's logged in.
 
 Core idea:
-Ties together everything built today: schemas validate incoming data,
-crud.py handles the actual database queries, auth.py handles password
-hashing and token creation, and database.py provides the session.
-response_model=UserResponse on signup ensures the password can never
-leak into the API response, even by accident. Keeping crud.py separate
-means the same get_user_by_email logic is reused by both signup and
-login instead of being duplicated.
+Ties together everything in the auth module: schemas validate
+incoming data, crud.py handles database queries, utils/security.py
+handles password hashing and token creation, and dependencies.py
+identifies the logged-in user via get_current_user. response_model
+on signup and /me ensures the password can never leak into an API
+response, even by accident.
 """
