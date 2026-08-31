@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 # This file defines the "shapes" of data that travel through our API.
 # Unlike models.py (which defines the actual database table),
@@ -74,3 +75,41 @@ distinction matters most for security — UserResponse deliberately
 excludes the password field entirely, so it can never accidentally
 leak out through the API, even though the database itself stores it.
 """
+
+# --- Dream & Milestone schemas (Riya) ---
+# Same pattern as above: separate shapes for what comes IN (create/request)
+# vs what goes OUT (response), keeping the API's public shape independent
+# of the internal database structure in models/dream.py.
+
+class MilestoneResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    order: int
+    is_completed: bool
+    due_date: Optional[datetime] = None
+    estimated_effort: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DreamCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    target_date: Optional[datetime] = None
+
+
+class DreamResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    status: str
+    progress_percentage: int
+    created_at: datetime
+    milestones: list[MilestoneResponse] = []
+
+    class Config:
+        from_attributes = True
