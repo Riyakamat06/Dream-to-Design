@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
-from models.user import User
-from schemas import UserCreate
+from models.user import User, JournalEntry
+from models.dream import Milestone
+from schemas import UserCreate, JournalEntryCreate
 from utils.security import hash_password
 
 # This file holds reusable database query functions — the actual
 # logic for reading/writing to the database, kept separate from
-# the API endpoints themselves (routers/users.py).
+# the API endpoints themselves (routers/auth.py, routers/milestones.py).
 
 # Why separate this from the router?
 # - Keeps routers focused on HTTP concerns (status codes, request/response shapes)
@@ -15,6 +16,12 @@ from utils.security import hash_password
 # Functions needed for users:
 # - get_user_by_email(db, email) -> finds a user, or None if not found
 # - create_user(db, user) -> saves a new user to the database
+
+# Functions needed for milestones and journal entries:
+# - get_milestone_by_id(db, milestone_id) -> finds a milestone, or None
+# - mark_milestone_complete(db, milestone) -> sets is_completed=True, saves
+# - create_journal_entry(db, milestone_id, entry) -> saves a new journal entry
+# - get_journal_entries_for_milestone(db, milestone_id) -> fetches all entries
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
@@ -33,15 +40,41 @@ def create_user(db: Session, user: UserCreate) -> User:
     return new_user
 
 
+def get_milestone_by_id(db: Session, milestone_id: int) -> Milestone | None:
+    return db.query(Milestone).filter(Milestone.id == milestone_id).first()
+
+
+def mark_milestone_complete(db: Session, milestone: Milestone) -> Milestone:
+    milestone.is_completed = True
+    db.commit()
+    db.refresh(milestone)
+    return milestone
+
+
+def create_journal_entry(db: Session, milestone_id: int, entry: JournalEntryCreate) -> JournalEntry:
+    new_entry = JournalEntry(
+        milestone_id=milestone_id,
+        content=entry.content,
+    )
+    db.add(new_entry)
+    db.commit()
+    db.refresh(new_entry)
+    return new_entry
+
+
+def get_journal_entries_for_milestone(db: Session, milestone_id: int) -> list[JournalEntry]:
+    return db.query(JournalEntry).filter(JournalEntry.milestone_id == milestone_id).all()
+
+
 """
 crud.py's role in the project:
-Holds reusable database query and write functions for users, kept
-separate from the API endpoints in routers/users.py.
+Holds reusable database query and write functions for users,
+milestones, and journal entries, kept separate from the API
+endpoints in routers/auth.py and routers/milestones.py.
 
 Core idea:
 Endpoints handle HTTP concerns (status codes, request validation);
-crud.py handles the actual database logic. This means the same
-get_user_by_email() logic used in both signup (checking for
-duplicates) and login (looking up credentials) lives in exactly
-one place instead of being duplicated across the router.
+crud.py handles the actual database logic. This means query logic
+like get_user_by_email() or get_milestone_by_id() lives in exactly
+one place, reused across multiple endpoints instead of duplicated.
 """
