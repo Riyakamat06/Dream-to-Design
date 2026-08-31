@@ -92,12 +92,9 @@ def _parse_response(raw_text: str) -> list[dict]:
 
     return data
 """
-- google.genai (new SDK) — the old google.generativeai package is fully deprecated and
-  no longer receiving updates or fixes. This file uses the new Client-based SDK instead,
-  so it won't silently break as Google phases the old package out.
+- google.genai (new SDK) —  This file uses the new Client-based SDK instead.
 
-- genai.Client(api_key=...) — replaces the old configure()/GenerativeModel() pattern.
-  One client object handles all requests; the model name is passed per-call instead of
+- genai.Client(api_key=...) — One client object handles all requests; the model name is passed per-call instead of
   being baked into a separate model object, which makes it easy to swap models later
   without restructuring the file.
 
