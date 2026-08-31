@@ -45,6 +45,7 @@ class Milestone(Base):
     dream = relationship("Dream", back_populates="milestones")
     reminders = relationship("Reminder", back_populates="milestone", cascade="all, delete-orphan")
     attachments = relationship("Attachment", back_populates="milestone", cascade="all, delete-orphan")
+    journal_entries = relationship("JournalEntry", back_populates="milestone", cascade="all, delete-orphan")
 
 
 class Reminder(Base):
